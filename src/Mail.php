@@ -2,6 +2,7 @@
 
 namespace Shyevsa\YiiSwiftmailer;
 
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\Mailer\EventListener\MessageListener;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -40,9 +41,11 @@ class Mail extends \CApplicationComponent
     public array $transportOptions;
 
     /**
-     * @var array the HTML to Text Converter Options
+     * @var array|null|false the HTML to Text Converter Options
+     * Default to `null` to use `League\HTMLToMarkdown\HtmlConverter`
+     * Set to `false` to disable HTML conversion
      */
-    public array $converter;
+    public $converter;
 
     /**
      * @var TransportInterface
@@ -53,13 +56,18 @@ class Mail extends \CApplicationComponent
      * @var MailerInterface
      */
     private MailerInterface $_mailer;
+
+    /**
+     * @var EventDispatcherInterface
+     */
     private $_event_dispatcher;
 
     /**
      * @param YiiMail $message
      * @return int
+     * @throws \CException
      */
-    public function send(Email $message)
+    public function send(Email $message): int
     {
         if ($this->dryRun) {
             return count($message->getTo());
@@ -76,6 +84,7 @@ class Mail extends \CApplicationComponent
 
     /**
      * @return MailerInterface
+     * @throws \CException
      */
     public function getMailer()
     {
@@ -86,6 +95,9 @@ class Mail extends \CApplicationComponent
         return $this->_mailer;
     }
 
+    /**
+     * @throws \CException
+     */
     public function getTransport(): TransportInterface
     {
         if (!isset($this->_transport)) {
@@ -95,6 +107,9 @@ class Mail extends \CApplicationComponent
         return $this->_transport;
     }
 
+    /**
+     * @throws \CException
+     */
     public function getEventDispatcher()
     {
         if (!isset($this->_event_dispatcher)) {
